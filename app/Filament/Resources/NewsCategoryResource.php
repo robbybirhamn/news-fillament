@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
-use App\Models\Role;
-use App\Models\User;
+use App\Filament\Resources\NewsCategoryResource\Pages;
+use App\Filament\Resources\NewsCategoryResource\RelationManagers;
+use App\Filament\Resources\NewsCategoryResource\RelationManagers\NewsRelationManager;
+use App\Models\NewsCategory;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Form;
@@ -16,25 +19,24 @@ use Filament\Tables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class UserResource extends Resource
+class NewsCategoryResource extends Resource
 {
-    protected static ?string $model = User::class;
+    protected static ?string $model = NewsCategory::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
-    protected static ?string $navigationGroup = 'User Managements';
-
+    protected static ?string $navigationGroup = 'News';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 TextInput::make('name')->required(),
-                TextInput::make('email')->required()->unique()->rules(['email']),
-                Select::make('role_id')
-                    ->label('Role')
-                    ->options(Role::all()->pluck('name', 'id'))
-                    ->searchable()
+                FileUpload::make('cover')->image()->directory('covers'),
+                Grid::make(1)
+                ->schema([
+                    RichEditor::make('description')
+                ])
             ]);
     }
 
@@ -43,8 +45,8 @@ class UserResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->sortable(),
-                Tables\Columns\TextColumn::make('email')->sortable(),
-                Tables\Columns\TextColumn::make('role.name')->sortable()
+                Tables\Columns\ImageColumn::make('cover'),
+                Tables\Columns\TextColumn::make('description')->sortable()->html(),
             ])
             ->filters([
                 //
@@ -60,16 +62,16 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            NewsRelationManager::class
         ];
     }
     
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUsers::route('/'),
-            'create' => Pages\CreateUser::route('/create'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'index' => Pages\ListNewsCategories::route('/'),
+            'create' => Pages\CreateNewsCategory::route('/create'),
+            'edit' => Pages\EditNewsCategory::route('/{record}/edit'),
         ];
     }    
 }
